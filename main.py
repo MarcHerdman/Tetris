@@ -24,6 +24,8 @@ s_height = 700
 play_width = 300  # meaning 300 // 10 = 30 width per block
 play_height = 600  # meaning 600 // 20 = 20 height per block
 block_size = 30
+num_columns = 10
+num_rows = 20
 
 top_left_x = (s_width - play_width) // 2
 top_left_y = s_height - play_height
@@ -174,8 +176,9 @@ def convert_shape_format(shape):
 
     return positions
 
+
 def valid_space(shape, grid):
-    accepted_pos = [[(j,i) for j in range(10) if grid[i][j] == (0, 0, 0)] for i in range(20)]
+    accepted_pos = [[(j, i) for j in range(10) if grid[i][j] == (0, 0, 0)] for i in range(20)]
     accepted_pos = [j for sub in accepted_pos for j in sub]  # convert to 1D array
 
     formatted = convert_shape_format(shape)
@@ -204,7 +207,8 @@ def draw_text_middle(text, size, color, surface):
     font = pygame.font.SysFont("comicsans", size, bold=True)
     label = font.render(text, True, color)
 
-    surface.blit(label,(top_left_x + play_width/2 -(label.get_width()/2), top_left_y + play_height/2 -(label.get_height()/2)))
+    surface.blit(label, (
+        top_left_x + play_width / 2 - (label.get_width() / 2), top_left_y + play_height / 2 - (label.get_height() / 2)))
 
 
 def draw_grid(surface, grid):
@@ -212,27 +216,28 @@ def draw_grid(surface, grid):
     sy = top_left_y
 
     for i in range(len(grid)):
-        pygame.draw.line(surface, (128,128,128), (sx, sy + i * block_size), (sx + play_width, sy + i * block_size))
+        pygame.draw.line(surface, (128, 128, 128), (sx, sy + i * block_size), (sx + play_width, sy + i * block_size))
         for j in range(len(grid[i])):
-            pygame.draw.line(surface, (128,128,128), (sx + j * block_size, sy), (sx + j * block_size, sy + play_height))
+            pygame.draw.line(surface, (128, 128, 128), (sx + j * block_size, sy),
+                             (sx + j * block_size, sy + play_height))
 
 
 def clear_rows(grid, locked):
     inc = 0
-    for i in range(len(grid)-1, -1, -1): #Loop backwards
+    for i in range(len(grid) - 1, -1, -1):  # Loop backwards
         row = grid[i]
-        if(0,0,0) not in row:
+        if (0, 0, 0) not in row:
             inc += 1
             ind = i
             for j in range(len(row)):
                 try:
-                    del locked[(j,i)]
+                    del locked[(j, i)]
                 except:
                     continue
 
     if inc > 0:
-        for key in sorted(list(locked), key = lambda x: x[1])[::-1]:
-            x,y = key
+        for key in sorted(list(locked), key=lambda x: x[1])[::-1]:
+            x, y = key
             if y < ind:
                 newKey = (x, y + inc)
                 locked[newKey] = locked.pop(key)
@@ -252,7 +257,8 @@ def draw_next_shape(shape, surface):
         row = list(line)
         for j, column in enumerate(row):
             if column == '0':
-                pygame.draw.rect(surface, shape.color, (sx + j*block_size, sy + i*block_size, block_size,block_size), 0)
+                pygame.draw.rect(surface, shape.color,
+                                 (sx + j * block_size, sy + i * block_size, block_size, block_size), 0)
 
     surface.blit(label, (sx + 10, sy - 30))
 
@@ -269,14 +275,13 @@ def draw_window(surface, grid, score=0, last_score=0):
     label = font.render('Score: ' + str(score), True, (255, 255, 255))
     sx = top_left_x + play_width + 50
     sy = top_left_y + play_height / 2
-    surface.blit(label, (sx + 20, sy + 60) )
-
+    surface.blit(label, (sx + 20, sy + 60))
 
     label = font.render('High Score: ' + str(last_score), True, (255, 255, 255))
     sx = top_left_x - 225
     sy = top_left_y + play_height / 2
 
-    surface.blit(label, (sx + 20, sy + 60) )
+    surface.blit(label, (sx + 20, sy + 60))
 
     for i in range(len(grid)):
         for j in range(len(grid[i])):
@@ -286,7 +291,28 @@ def draw_window(surface, grid, score=0, last_score=0):
     pygame.draw.rect(surface, (255, 0, 0), (top_left_x, top_left_y, play_width, play_height), 4)
 
     draw_grid(surface, grid)
-    #pygame.display.update()
+    # pygame.display.update()
+
+
+def get_tops_and_gaps(grid):
+    tops = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    gaps = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    for column in range(num_columns):
+        count = num_rows
+        gap_count = 0
+        found_top = False
+        for row in range(num_rows):
+            if grid[row][column] != (0, 0, 0):
+                if not found_top:
+                    tops[column] = count
+                    found_top = True
+            else:
+                if found_top:
+                    gap_count += 1
+            count -= 1
+        gaps[column] = gap_count
+
+    return tops, gaps
 
 
 def update_score(nscore):
@@ -327,15 +353,15 @@ def main(win):
         level_time += clock.get_rawtime()
         clock.tick()
 
-        if level_time/1000 > 5:
+        if level_time / 1000 > 5:
             level_time = 0
             if fall_speed > 0.12:
                 fall_speed -= 0.005
 
-        if fall_time/1000 > fall_speed:
+        if fall_time / 1000 > fall_speed:
             fall_time = 0
             current_piece.y += 1
-            if not(valid_space(current_piece, grid)) and current_piece.y > 0:
+            if not (valid_space(current_piece, grid)) and current_piece.y > 0:
                 current_piece.y -= 1
                 change_piece = True
 
@@ -346,19 +372,19 @@ def main(win):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     current_piece.x -= 1
-                    if not(valid_space(current_piece, grid)):
+                    if not (valid_space(current_piece, grid)):
                         current_piece.x += 1
                 if event.key == pygame.K_RIGHT:
                     current_piece.x += 1
-                    if not(valid_space(current_piece, grid)):
+                    if not (valid_space(current_piece, grid)):
                         current_piece.x -= 1
                 if event.key == pygame.K_DOWN:
                     current_piece.y += 1
-                    if not(valid_space(current_piece, grid)):
+                    if not (valid_space(current_piece, grid)):
                         current_piece.y -= 1
                 if event.key == pygame.K_UP:
                     current_piece.rotation += 1
-                    if not(valid_space(current_piece, grid)):
+                    if not (valid_space(current_piece, grid)):
                         current_piece.rotation -= 1
 
         shape_pos = convert_shape_format(current_piece)
@@ -375,14 +401,17 @@ def main(win):
             current_piece = next_piece
             next_piece = get_shape()
             change_piece = False
-            score += clear_rows(grid,locked_positions) * 10
+            score += clear_rows(grid, locked_positions) * 10
+            tops, gaps = get_tops_and_gaps(grid)
+            print("Tops:", tops)
+            print("Gaps:", gaps)
 
         draw_window(win, grid, score, last_score)
         draw_next_shape(next_piece, win)
         pygame.display.update()
 
         if check_lost(locked_positions):
-            draw_text_middle("GAME OVER", 80, (192,192,192), win)
+            draw_text_middle("GAME OVER", 80, (192, 192, 192), win)
             pygame.display.update()
             pygame.time.delay(1500)
             run = False
@@ -392,8 +421,8 @@ def main(win):
 def main_menu(win):
     run = True
     while run:
-        win.fill((0,0,0))
-        draw_text_middle('Press any key to play.', 60, (255,255,255), win)
+        win.fill((0, 0, 0))
+        draw_text_middle('Press any key to play.', 60, (255, 255, 255), win)
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
