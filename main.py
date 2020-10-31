@@ -1,5 +1,6 @@
 import pygame
 import random
+import sys
 
 # creating the data structure for pieces
 # setting up global vars
@@ -332,10 +333,51 @@ def max_score():
     return score
 
 
-def main(win):
+def get_user_input(current_piece, grid):
+    run = True
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+            pygame.display.quit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                current_piece.x -= 1
+                if not (valid_space(current_piece, grid)):
+                    current_piece.x += 1
+            if event.key == pygame.K_RIGHT:
+                current_piece.x += 1
+                if not (valid_space(current_piece, grid)):
+                    current_piece.x -= 1
+            if event.key == pygame.K_DOWN:
+                current_piece.y += 1
+                if not (valid_space(current_piece, grid)):
+                    current_piece.y -= 1
+            if event.key == pygame.K_UP:
+                current_piece.rotation += 1
+                if not (valid_space(current_piece, grid)):
+                    current_piece.rotation -= 1
+    return run
+
+
+def get_ai_input(current_piece, grid):
+    action = random.choice(["Nan", "Rot", "Left", "Right"])
+    if action == "Rot":
+        current_piece.rotation += 1
+        if not (valid_space(current_piece, grid)):
+            current_piece.rotation -= 1
+    elif action == "Left":
+        current_piece.x -= 1
+        if not (valid_space(current_piece, grid)):
+            current_piece.x += 1
+    elif action == "Right":
+        current_piece.x += 1
+        if not (valid_space(current_piece, grid)):
+            current_piece.x -= 1
+
+def main(win, ai_mode):
     last_score = max_score()
     locked_positions = {}
-    grid = create_grid(locked_positions)
+    #grid = create_grid(locked_positions)
 
     change_piece = False
     run = True
@@ -350,42 +392,33 @@ def main(win):
     while run:
         grid = create_grid(locked_positions)
         fall_time += clock.get_rawtime()
-        level_time += clock.get_rawtime()
+        #level_time += clock.get_rawtime()
         clock.tick()
 
-        if level_time / 1000 > 5:
-            level_time = 0
-            if fall_speed > 0.12:
-                fall_speed -= 0.005
+        #if level_time / 1000 > 5:
+        #    level_time = 0
+        #    if fall_speed > 0.12:
+        #        fall_speed -= 0.005
 
         if fall_time / 1000 > fall_speed:
+            if ai_mode:
+                get_ai_input(current_piece, grid)
             fall_time = 0
             current_piece.y += 1
             if not (valid_space(current_piece, grid)) and current_piece.y > 0:
                 current_piece.y -= 1
                 change_piece = True
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
+        if not ai_mode:
+            print("Not in AI mode")
+            run = get_user_input(current_piece, grid)
+            if not run:
                 pygame.display.quit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    current_piece.x -= 1
-                    if not (valid_space(current_piece, grid)):
-                        current_piece.x += 1
-                if event.key == pygame.K_RIGHT:
-                    current_piece.x += 1
-                    if not (valid_space(current_piece, grid)):
-                        current_piece.x -= 1
-                if event.key == pygame.K_DOWN:
-                    current_piece.y += 1
-                    if not (valid_space(current_piece, grid)):
-                        current_piece.y -= 1
-                if event.key == pygame.K_UP:
-                    current_piece.rotation += 1
-                    if not (valid_space(current_piece, grid)):
-                        current_piece.rotation -= 1
+        else:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+                    pygame.display.quit()
 
         shape_pos = convert_shape_format(current_piece)
 
@@ -402,9 +435,10 @@ def main(win):
             next_piece = get_shape()
             change_piece = False
             score += clear_rows(grid, locked_positions) * 10
-            tops, gaps = get_tops_and_gaps(grid)
-            print("Tops:", tops)
-            print("Gaps:", gaps)
+            #score += baseScore * (baseScore/2) * 10
+            #tops, gaps = get_tops_and_gaps(grid)
+            #print("Tops:", tops)
+            #print("Gaps:", gaps)
 
         draw_window(win, grid, score, last_score)
         draw_next_shape(next_piece, win)
@@ -416,9 +450,19 @@ def main(win):
             pygame.time.delay(1500)
             run = False
             update_score(score)
+            main_menu(win)
 
 
 def main_menu(win):
+    inAImode = False
+    print('Number of arguments:', len(sys.argv), 'arguments.')
+    print('Argument List:', str(sys.argv))
+    if len(sys.argv) > 1 and sys.argv[1] == "ai":
+        print("Accept")
+        inAImode = True
+    main(win, inAImode)
+
+    """"
     run = True
     while run:
         win.fill((0, 0, 0))
@@ -430,7 +474,7 @@ def main_menu(win):
             if event.type == pygame.KEYDOWN:
                 main(win)
     pygame.display.quit()
-
+    """
 
 win = pygame.display.set_mode((s_width, s_height))
 pygame.display.set_caption("Tetris")
