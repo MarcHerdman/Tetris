@@ -1,6 +1,9 @@
 import pygame
 import random
 import sys
+import datetime
+import json
+
 
 # creating the data structure for pieces
 # setting up global vars
@@ -30,6 +33,8 @@ num_rows = 20
 
 top_left_x = (s_width - play_width) // 2
 top_left_y = s_height - play_height
+
+game_record = {}
 
 # SHAPE FORMATS
 
@@ -137,18 +142,19 @@ T = [['.....',
 
 shapes = [S, Z, I, O, J, L, T]
 shape_colors = [(0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 255, 0), (255, 165, 0), (0, 0, 255), (128, 0, 128)]
-
+shape_names = ["S", "Z", "I", "O", "J", "L", "T"]
 
 # index 0 - 6 represent shape
 
 
 class Piece(object):
-    def __init__(self, x, y, shape):
+    def __init__(self, x, y, shape, name):
         self.x = x
         self.y = y
         self.shape = shape
         self.color = shape_colors[shapes.index(shape)]
         self.rotation = 0
+        self.name = name
 
 
 def create_grid(locked_pos={}):  # *
@@ -201,7 +207,8 @@ def check_lost(positions):
 
 
 def get_shape():
-    return Piece(5, 0, random.choice(shapes))
+    selection = random.randrange(7)
+    return Piece(5, 0, shapes[selection], shape_names[selection])
 
 
 def draw_text_middle(text, size, color, surface):
@@ -333,30 +340,43 @@ def max_score():
     return score
 
 
+def write_log(log):
+    filename = log["Time"] + ".txt"
+    with open(filename, 'w') as f:
+        f.write(json.dumps(log))
+
+
 def get_user_input(current_piece, grid):
     run = True
+    action = None
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-            pygame.display.quit()
+            #pygame.display.quit()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 current_piece.x -= 1
+                action = "Left"
                 if not (valid_space(current_piece, grid)):
                     current_piece.x += 1
+                    action = None
             if event.key == pygame.K_RIGHT:
                 current_piece.x += 1
+                action = "Right"
                 if not (valid_space(current_piece, grid)):
                     current_piece.x -= 1
+                    action = None
             if event.key == pygame.K_DOWN:
                 current_piece.y += 1
                 if not (valid_space(current_piece, grid)):
                     current_piece.y -= 1
             if event.key == pygame.K_UP:
                 current_piece.rotation += 1
+                action = "Rotate"
                 if not (valid_space(current_piece, grid)):
                     current_piece.rotation -= 1
-    return run
+                    action = None
+    return run, action
 
 
 def get_ai_input(current_piece, grid):
@@ -389,6 +409,20 @@ def main(win, ai_mode):
     level_time = 0
     score = 0
 
+    game_record = {}
+    date_time = datetime.datetime.now()
+    dt = str(date_time.month) + "_" + str(date_time.day) + "_" + str(date_time.hour) + "_" + str(
+        date_time.minute) + "_" + str(date_time.second)
+    print("Now:", dt)
+    game_record["Time"] = dt
+    piece_num = 0
+    piece_record = {}
+    game_record[str(piece_num)] = piece_record
+    game_record[str(piece_num)]["Cur"] = current_piece.name
+    game_record[str(piece_num)]["Next"] = next_piece.name
+    print(game_record)
+    move_record = []
+
     while run:
         grid = create_grid(locked_positions)
         fall_time += clock.get_rawtime()
@@ -410,10 +444,11 @@ def main(win, ai_mode):
                 change_piece = True
 
         if not ai_mode:
-            print("Not in AI mode")
-            run = get_user_input(current_piece, grid)
+            run, action = get_user_input(current_piece, grid)
             if not run:
                 pygame.display.quit()
+            if action:
+                move_record.append(action)
         else:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -431,10 +466,23 @@ def main(win, ai_mode):
             for pos in shape_pos:
                 p = (pos[0], pos[1])
                 locked_positions[p] = current_piece.color
+
+            game_record[str(piece_num)]["Moves"] = move_record
+            move_record = []
+
+            score += clear_rows(grid, locked_positions) * 10
+            game_record[str(piece_num)]["Score"] = score
+
+            piece_num += 1
             current_piece = next_piece
             next_piece = get_shape()
+            game_record[str(piece_num)] = {}
+            game_record[str(piece_num)]["Cur"] = current_piece.name
+            game_record[str(piece_num)]["Next"] = next_piece.name
+            #print(game_record)
+
             change_piece = False
-            score += clear_rows(grid, locked_positions) * 10
+
             #score += baseScore * (baseScore/2) * 10
             #tops, gaps = get_tops_and_gaps(grid)
             #print("Tops:", tops)
@@ -445,6 +493,7 @@ def main(win, ai_mode):
         pygame.display.update()
 
         if check_lost(locked_positions):
+            write_log(game_record)
             draw_text_middle("GAME OVER", 80, (192, 192, 192), win)
             pygame.display.update()
             pygame.time.delay(1500)
