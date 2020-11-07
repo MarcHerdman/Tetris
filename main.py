@@ -3,6 +3,7 @@ import random
 import sys
 import datetime
 import json
+import os
 
 
 # creating the data structure for pieces
@@ -326,7 +327,11 @@ def get_tops_and_gaps(grid):
 def update_score(nscore):
     score = max_score()
 
-    with open('scores.txt', 'w') as f:
+
+    THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+    myfile = os.path.join(THIS_FOLDER, 'scores.txt')
+
+    with open(myfile, 'w') as f:
         if nscore > int(score):
             f.write(str(nscore))
         else:
@@ -334,7 +339,11 @@ def update_score(nscore):
 
 
 def max_score():
-    with open('scores.txt', 'r') as f:
+    
+    THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+    myfile = os.path.join(THIS_FOLDER, 'scores.txt')
+
+    with open(myfile, 'r') as f:
         lines = f.readlines()
         score = lines[0].strip()
     return score
