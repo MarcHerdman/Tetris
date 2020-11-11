@@ -2,7 +2,7 @@
 
 # Tetris
 
-User Interface to create and edit questions for SCALE
+Tetris game with AI in it for CSCI 166 at Fresno State
 
 ## Requirements
 python3 and pip3
