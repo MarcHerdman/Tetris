@@ -1,0 +1,4 @@
+graphviz-0.14.2
+pydot-ng
+nvidia CUDA 64bit Version 10.1
+Tensorflow-gpu
