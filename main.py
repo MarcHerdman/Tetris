@@ -1,3 +1,4 @@
+import os
 import pygame
 import random
 import sys
@@ -744,7 +745,10 @@ def main_menu(win):
                 main(win)
     pygame.display.quit()
     """
-
+if len(sys.argv) > 1 and sys.argv[1] == "ai":
+        if len(sys.argv) > 2:
+            if sys.argv[2] == "nv":
+                os.environ['SDL_VIDEODRIVER'] = 'dummy'
 win = pygame.display.set_mode((s_width, s_height))
 pygame.display.set_caption("Tetris")
 main_menu(win)  # start game
