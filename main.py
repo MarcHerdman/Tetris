@@ -242,6 +242,39 @@ def get_shape():
     # selection = 0
     return Piece(num_columns // 2, 0, shapes[selection], shape_names[selection])
 
+    def get_tile():
+    from random import shuffle
+    tiles = list(range(7))
+    while True:
+        shuffle(tiles)
+        for tile in tiles:
+            yield Piece(5, 0, shapes[tile], shape_names[tile])
+
+class PeekableQueue:
+    def __init__(self, item_getter, maxpeek=50):
+        self.getter = item_getter
+        self.maxpeek = maxpeek
+        self.b = [next(item_getter) for _ in range(maxpeek)]
+        self.i = 0
+
+    def pop(self):
+        result = self.b[self.i]
+        self.b[self.i] = next(self.getter)
+        self.i += 1
+        if self.i >= self.maxpeek:
+            self.i = 0
+        return result
+
+    def peek(self, n):
+        if not 0 <= n <= self.maxpeek:
+            raise ValueError("bad peek argument %r" % n)
+        nthruend = self.maxpeek - self.i
+        if n <= nthruend:
+            result = self.b[self.i : self.i + n]
+        else:
+            result = self.b[self.i:] + self.b[:n - nthruend]
+        return result
+
 
 def draw_text_middle(text, size, color, surface):
     '''Draw large text in the middle of the screen'''
@@ -551,8 +584,9 @@ def main(win, ai_mode, vizAI):
 
     change_piece = False
     run = True
-    current_piece = get_shape()
-    next_piece = get_shape()
+    piece_generator = PeekableQueue(get_tile())
+    current_piece = piece_generator.pop()
+    next_piece = (piece_generator.peek(1))[0]
     ai_best_action = []
     if ai_mode:
         ai_best_action = get_ai_input(current_piece, grid, win, vizAI)
@@ -645,8 +679,8 @@ def main(win, ai_mode, vizAI):
             game_record[str(piece_num)]["Score"] = score
 
             piece_num += 1
-            current_piece = next_piece
-            next_piece = get_shape()
+            current_piece = piece_generator.pop()
+            next_piece = (piece_generator.peek(1))[0]
             game_record[str(piece_num)] = {}
             game_record[str(piece_num)]["Cur"] = current_piece.name
             game_record[str(piece_num)]["Next"] = next_piece.name
