@@ -4,6 +4,7 @@ import sys
 import datetime
 import time
 import json
+from random import shuffle
 
 
 # creating the data structure for pieces
@@ -243,7 +244,6 @@ def get_shape():
     return Piece(num_columns // 2, 0, shapes[selection], shape_names[selection])
 
 def get_tile():
-    from random import shuffle
     tiles = list(range(7))
     while True:
         shuffle(tiles)
@@ -299,26 +299,26 @@ def clear_rows(grid, locked):
     inc = False
     ind = []
     for i in range(len(grid) - 1, -1, -1):
-    	row = grid[i]
-    	if (0, 0, 0) not in row:
-    		inc = True
-    		ind.append(i) # Used to indexing which row had been removed
-    		for j in range(len(row)):
-    			try:
-    				del locked[(j, i)]
-    			except:
-    				continue
+        row = grid[i]
+        if (0, 0, 0) not in row:
+            inc = True
+            ind.append(i) # Used to indexing which row had been removed
+            for j in range(len(row)):
+                try:
+                    del locked[(j, i)]
+                except:
+                    continue
 
     if inc:
-    	for key in sorted(list(locked), key = lambda x: x[1])[::-1]:
-    		x, y = key
-    		increment = 0
-    		for d in ind:
-    			if y < d:
-    				increment += 1
-    		if ( increment ) > 0:
-	    		newKey = (x, y + increment)
-	    		locked[newKey] = locked.pop(key)
+        for key in sorted(list(locked), key = lambda x: x[1])[::-1]:
+            x, y = key
+            increment = 0
+            for d in ind:
+                if y < d:
+                    increment += 1
+            if ( increment ) > 0:
+                newKey = (x, y + increment)
+                locked[newKey] = locked.pop(key)
     return inc
 
 
@@ -529,12 +529,7 @@ def get_ai_input(current_piece, grid, surface, vizAI):
                 grid[pos[1]][pos[0]] = (255, 255, 255)
             line_score = 0
             for i in range(piece_min, piece_max + 1):
-                row = grid[i]
-                isComplete = True
-                for slot in row:
-                    if slot == (0, 0, 0):
-                        isComplete = False
-                if isComplete:
+                if (0,0,0) not in grid[i]:
                     line_score += 1
             if vizAI:
                 draw_window(surface, grid)
@@ -577,7 +572,7 @@ def get_ai_input(current_piece, grid, surface, vizAI):
     return best_action
 
 
-def main(win, ai_mode, vizAI):
+def main(win, ai_mode, vizAI, showGame):
     last_score = max_score()
     locked_positions = {}
     grid = create_grid(locked_positions)
@@ -595,7 +590,7 @@ def main(win, ai_mode, vizAI):
     fall_time = 0
     fall_speed = 0.27
     if ai_mode:
-        fall_speed = 0.002
+        fall_speed = 0.0
     level_time = 0
     score = 0
 
@@ -622,7 +617,7 @@ def main(win, ai_mode, vizAI):
         clear_window(win)
         grid = create_grid(locked_positions)
         fall_time += clock.get_rawtime()
-        #level_time += clock.get_rawtime()
+        level_time += clock.get_rawtime()
         clock.tick()
 
         #if level_time / 1000 > 5:
@@ -640,6 +635,7 @@ def main(win, ai_mode, vizAI):
                         current_piece.x -= 1
                     elif move == "Right":
                         current_piece.x += 1
+                    move_record.append(move)
                     ai_moves_so_far += 1
             fall_time = 0
             current_piece.y += 1
@@ -674,7 +670,10 @@ def main(win, ai_mode, vizAI):
             game_record[str(piece_num)]["Moves"] = move_record
             move_record = []
 
-            score += clear_rows(grid, locked_positions) * 10
+            prevScore = score
+            score += clear_rows(grid, locked_positions)
+            if score != prevScore and score % 100 == 0:
+                print(score, "in", time.strftime("%H:%M:%S", time.gmtime(level_time // 1000)))
             grid = create_grid(locked_positions)
             game_record[str(piece_num)]["Score"] = score
 
@@ -698,16 +697,18 @@ def main(win, ai_mode, vizAI):
             #print("Tops:", tops)
             #print("Gaps:", gaps)
 
-        draw_window(win, grid)
-        draw_next_shape(next_piece, win)
-        draw_labels(win, height, gaps, bumpiness, score, last_score, height_list, gaps_list)
-        pygame.display.update()
+        if showGame:
+            draw_window(win, grid)
+            draw_next_shape(next_piece, win)
+            draw_labels(win, height, gaps, bumpiness, score, last_score, height_list, gaps_list)
+            pygame.display.update()
 
         if check_lost(locked_positions):
             write_log(game_record)
-            draw_text_middle("GAME OVER", 80, (192, 192, 192), win)
-            pygame.display.update()
-            pygame.time.delay(1500)
+            if showGame:
+                draw_text_middle("GAME OVER", 80, (192, 192, 192), win)
+                pygame.display.update()
+                pygame.time.delay(1500)
             run = False
             update_score(score)
             main_menu(win)
@@ -716,14 +717,19 @@ def main(win, ai_mode, vizAI):
 def main_menu(win):
     inAImode = False
     visualizeAI = False
+    showGame = True
+
     print('Number of arguments:', len(sys.argv), 'arguments.')
     print('Argument List:', str(sys.argv))
     if len(sys.argv) > 1 and sys.argv[1] == "ai":
         print("Accept")
         inAImode = True
-        if len(sys.argv) > 2 and sys.argv[2] == "v":
-            visualizeAI = True
-    main(win, inAImode, visualizeAI)
+        if len(sys.argv) > 2:
+            if sys.argv[2] == "v":
+                visualizeAI = True
+            elif sys.argv[2] == "nv":
+                showGame = False
+    main(win, inAImode, visualizeAI, showGame)
 
     """"
     run = True
