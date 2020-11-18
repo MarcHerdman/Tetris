@@ -262,31 +262,32 @@ def draw_grid(surface, grid):
             pygame.draw.line(surface, (128, 128, 128), (sx + j * block_size, sy),
                              (sx + j * block_size, sy + play_height))
 
-
 def clear_rows(grid, locked):
-    '''Remove completed rows and drop the rows above.'''
-    # This function is overcomplicated. Should be able to
-    # just copy the values from each line above.
-    # No need to delete rows from the list and push new lists
-    inc = 0
-    for i in range(len(grid) - 1, -1, -1):  # Loop backwards
-        row = grid[i]
-        if (0, 0, 0) not in row:
-            inc += 1
-            ind = i
-            for j in range(len(row)):
-                try:
-                    del locked[(j, i)]
-                except:
-                    continue
-    if inc > 0:
-        for key in sorted(list(locked), key=lambda x: x[1])[::-1]:
-            x, y = key
-            if y < ind:
-                newKey = (x, y + inc)
-                locked[newKey] = locked.pop(key)
+    inc = False
+    ind = []
+    for i in range(len(grid) - 1, -1, -1):
+    	row = grid[i]
+    	if (0, 0, 0) not in row:
+    		inc = True
+    		ind.append(i) # Used to indexing which row had been removed
+    		for j in range(len(row)):
+    			try:
+    				del locked[(j, i)]
+    			except:
+    				continue
 
+    if inc:
+    	for key in sorted(list(locked), key = lambda x: x[1])[::-1]:
+    		x, y = key
+    		increment = 0
+    		for d in ind:
+    			if y < d:
+    				increment += 1
+    		if ( increment ) > 0:
+	    		newKey = (x, y + increment)
+	    		locked[newKey] = locked.pop(key)
     return inc
+
 
 
 def draw_next_shape(shape, surface):
@@ -396,7 +397,7 @@ def get_heuristics(grid):
     bumpiness = 0
     for i in range(len(tops) - 1):
         bumpiness += abs(tops[i] - tops[i+1])
-    print(ag_height, ag_gaps, bumpiness)
+    #print(ag_height, ag_gaps, bumpiness)
     return ag_height, ag_gaps, bumpiness, tops, gaps
 
 
@@ -464,7 +465,7 @@ def get_user_input(current_piece, grid):
                 if not (valid_space(current_piece, grid)):
                     current_piece.rotation -= 1
                     action = None
-            print("X",current_piece.x)
+            #print("X",current_piece.x)
     return run, action
 
 
@@ -487,7 +488,7 @@ def get_ai_input(current_piece, grid, surface, vizAI):
             piece_min = 500
             piece_max = -500
             for pos in formatted:
-                print(pos)
+                #print(pos)
                 if pos[1] < piece_min:
                     piece_min = pos[1]
                 if pos[1] > piece_max:
@@ -539,7 +540,7 @@ def get_ai_input(current_piece, grid, surface, vizAI):
     current_piece.x = num_columns // 2
     current_piece.y = 0
 
-    print(best_action)
+    #print(best_action)
     return best_action
 
 
@@ -560,7 +561,7 @@ def main(win, ai_mode, vizAI):
     fall_time = 0
     fall_speed = 0.27
     if ai_mode:
-        fall_speed = 0.02
+        fall_speed = 0.002
     level_time = 0
     score = 0
 
