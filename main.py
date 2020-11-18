@@ -242,7 +242,7 @@ def get_shape():
     # selection = 0
     return Piece(num_columns // 2, 0, shapes[selection], shape_names[selection])
 
-    def get_tile():
+def get_tile():
     from random import shuffle
     tiles = list(range(7))
     while True:
