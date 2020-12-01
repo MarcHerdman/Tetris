@@ -599,14 +599,14 @@ def main(win, ai_mode, vizAI, showGame):
     date_time = datetime.datetime.now()
     dt = str(date_time.month) + "_" + str(date_time.day) + "_" + str(date_time.hour) + "_" + str(
         date_time.minute) + "_" + str(date_time.second)
-    print("Now:", dt)
+    #print("Now:", dt)
     game_record["Time"] = dt
     piece_num = 0
     piece_record = {}
     game_record[str(piece_num)] = piece_record
     game_record[str(piece_num)]["Cur"] = current_piece.name
     game_record[str(piece_num)]["Next"] = next_piece.name
-    print(game_record)
+    #print(game_record)
     move_record = []
     height = 0
     gaps = 0
@@ -673,8 +673,8 @@ def main(win, ai_mode, vizAI, showGame):
 
             prevScore = score
             score += clear_rows(grid, locked_positions)
-            if score != prevScore and score % 100 == 0:
-                print(score, "in", time.strftime("%H:%M:%S", time.gmtime(level_time // 1000)))
+            #if score != prevScore and score % 100 == 0:
+                #print(score, "in", time.strftime("%H:%M:%S", time.gmtime(level_time // 1000)))
             grid = create_grid(locked_positions)
             game_record[str(piece_num)]["Score"] = score
 
@@ -705,6 +705,7 @@ def main(win, ai_mode, vizAI, showGame):
             pygame.display.update()
 
         if check_lost(locked_positions):
+            print(score, "in", time.strftime("%H:%M:%S", time.gmtime(level_time // 1000)))
             write_log(game_record)
             if showGame:
                 draw_text_middle("GAME OVER", 80, (192, 192, 192), win)
@@ -713,6 +714,7 @@ def main(win, ai_mode, vizAI, showGame):
             run = False
             update_score(score)
             main_menu(win)
+            sys.exit(0) 
 
 
 def main_menu(win):
@@ -720,8 +722,8 @@ def main_menu(win):
     visualizeAI = False
     showGame = True
 
-    print('Number of arguments:', len(sys.argv), 'arguments.')
-    print('Argument List:', str(sys.argv))
+    #print('Number of arguments:', len(sys.argv), 'arguments.')
+    #print('Argument List:', str(sys.argv))
     if len(sys.argv) > 1 and sys.argv[1] == "ai":
         print("Accept")
         inAImode = True
