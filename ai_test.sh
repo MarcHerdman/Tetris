@@ -1,5 +1,6 @@
 #!/bin/bash
-for i in {1..50}
+for i in {1..3}
 do
-   nohup python3 main.py ai nv >> tetris.log 2>&1 &
+   python3 main.py ai nv &
+   #nohup python3 main.py ai nv >> tetris.log 2>&1 &
 done

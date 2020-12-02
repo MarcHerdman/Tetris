@@ -713,8 +713,9 @@ def main(win, ai_mode, vizAI, showGame):
                 pygame.time.delay(1500)
             run = False
             update_score(score)
-            main_menu(win)
             sys.exit(0) 
+            main_menu(win)
+            
 
 
 def main_menu(win):
