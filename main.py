@@ -707,7 +707,7 @@ def main(win, ai_mode, vizAI, showGame):
         if check_lost(locked_positions):
             print(score, "in", time.strftime("%H:%M:%S", time.gmtime(level_time // 1000)))
             f = open('TetrisTesting.log', 'a')
-            f.write(str(score) + " in " + str(time.strftime("%H:%M:%S", time.gmtime(level_time // 1000))))
+            f.write("\n"+str(score) + " in " + str(time.strftime("%H:%M:%S", time.gmtime(level_time // 1000))))
             f.close()
             write_log(game_record)
             if showGame:
