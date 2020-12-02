@@ -673,8 +673,8 @@ def main(win, ai_mode, vizAI, showGame):
 
             prevScore = score
             score += clear_rows(grid, locked_positions)
-            #if score != prevScore and score % 100 == 0:
-                #print(score, "in", time.strftime("%H:%M:%S", time.gmtime(level_time // 1000)))
+            if score != prevScore and score % 1000 == 0:
+                print(score, "in", time.strftime("%H:%M:%S", time.gmtime(level_time // 1000)))
             grid = create_grid(locked_positions)
             game_record[str(piece_num)]["Score"] = score
 
@@ -706,6 +706,9 @@ def main(win, ai_mode, vizAI, showGame):
 
         if check_lost(locked_positions):
             print(score, "in", time.strftime("%H:%M:%S", time.gmtime(level_time // 1000)))
+            f = open('TetrisTesting.log', 'a')
+            f.write(str(score) + " in " + str(time.strftime("%H:%M:%S", time.gmtime(level_time // 1000))))
+            f.close()
             write_log(game_record)
             if showGame:
                 draw_text_middle("GAME OVER", 80, (192, 192, 192), win)
@@ -713,7 +716,6 @@ def main(win, ai_mode, vizAI, showGame):
                 pygame.time.delay(1500)
             run = False
             update_score(score)
-            sys.exit(0) 
             main_menu(win)
             
 
